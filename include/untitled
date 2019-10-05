@@ -1,0 +1,56 @@
+#include <terminal.h>
+Terminal(VGA v) {
+	this->v = v;
+}
+
+void Print(char* str) {
+	char c;
+	while ((c = *str++) != '\0') {
+		this->PrintChar(c);
+	}
+}
+
+void PrintChar(char c) {
+	switch (c) {
+	case '\n':
+		this->cursorY += 16;
+		this->cursorX = 0;
+		break;
+	case '\t':
+		this->cursorX += 8+1;
+		break;
+	default:
+		this->v.drawChar(c, this->cursorX, this->cursorY, this->colour);
+		this->cursorX += (8)+1;
+		break;
+	}
+}
+
+void printf(const char* format, ...) {
+	char **arg = (char**) &format;
+	int c;
+	char buf[20];
+
+	arg++;
+
+	while ((c = *format++) != '\0') {
+		char* p;
+
+		if (c != '%') {
+			this->PrintChar(c);
+		} else {
+			c = *format++;
+			switch (c) {
+			case 'd':
+			case 'u':
+			case 'x':
+				itoa(buf, c, *((int*) arg++));
+				this->Print(buf);
+				break;
+			default:
+				this->PrintChar(*((int*) arg++));
+				break;
+			}
+		}
+	}
+}

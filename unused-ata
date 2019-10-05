@@ -1,0 +1,105 @@
+
+
+
+VGA vga;
+Terminal term;
+RTC time;
+
+
+
+int pci_extract_bus(uint32_t device) {
+	return (uint8_t)((device >> 16));
+}
+
+int pci_extract_slot(uint32_t device) {
+	return (uint8_t)((device >> 8));
+}
+
+int pci_extract_func(uint32_t device) {
+	return (uint8_t)(device);
+}
+
+uint32_t pci_get_address(uint32_t device, int field) {
+	return 0x80000000 | (pci_extract_bus(device) << 16) | (pci_extract_slot(device) << 11) | (pci_extract_func(device) << 8) | ((field)  &0xDFC);
+}
+
+uint32_t pci_read_field(uint32_t device, int field, int size) {
+	Ports::outl(0xCF8, pci_get_address(device, field));
+	if (size == 4) {
+		uint32_t t = Ports::inl(0xCFC);
+		return t;
+	}
+	if (size == 2) {
+		uint16_t t = Ports::inw(0xCFC);
+		return t;
+	}
+	if (size == 1) {
+		uint8_t t = Ports::inb(0xCFC);
+		return t;
+	}
+
+	return 0xFFFF;
+}
+
+void ata_device_read_sector(struct ata_device * dev, uint32_t lba, uint8_t* buf) {
+	uint16_t bus = dev->io_base;
+	uint8_t slave = dev->slave;
+
+	/*if (dev->is_atapi) return;
+
+	ata_wait(dev,0);
+	Ports::outb(dev->bar4, 0x00);
+	Ports::outb(dev->bar4 + 0x2, Ports::inb(dev->bar4 + 0x02) | 0x04 | 0x02);
+	Ports::outb(dev->bar4, 0x08);
+
+	while (1) {
+		uint8_t status = Ports::inb(dev->io_base + ATA_REG_STATUS);
+		if (!(status & ATA_SR_BSY)) break;
+	}
+
+	Ports::outb(bus + 0x0c, 0x0);
+	Ports::outb(bus + ATA_REG_HDDEVSEL, 0xe0 | slave << 4 | (lba & 0xf00000) >> 24);
+	ata_io_wait(dev);
+	Ports::outb(bus + 0x01, 0x00);
+	Ports::outb(bus + 0x02, 0x01);
+	Ports::outb(bus + 0x03, (lba & 0x000000ff) >> 0);
+	Ports::outb(bus + 0x04, (lba & 0x0000ff00) >> 8);
+	Ports::outb(bus + 0x05, (lba & 0x00ff0000) >> 16);
+
+	while (1) {
+		uint8_t status = Ports::inb(dev->io_base + 0x07);
+		if(!(status & ATA_SR_BSY) && (status & 0x40));
+	}
+
+	Ports::outb(bus + 0x07, 0xC8); //--------------
+	ata_io_wait(dev);
+	Ports::outb(dev->bar4, 0x08 | 0x01);
+
+	while(1) {
+		int status = Ports::inb(dev->bar4 + 0x02);
+		int dstatus = Ports::inb(bus + 0x07);
+		if (!(status & 0x04)) {
+			continue;
+		}
+		if (!(dstatus & 0x80)) {
+			break;
+		}
+	}
+
+	term.printf("shit: %s\n", (char*)dev->dma_start);
+
+	Ports::outb(dev->bar4 + 0x2, Ports::inb(dev->bar4 + 0x02) | 0x04 | 0x02);*/
+
+	Ports::outb(bus + ATA_REG_HDDEVSEL, 0xA0 | dev->slave << 4);
+	ata_io_wait(dev);
+
+	Ports::outb(bus + 0x01, 0x00);
+	Ports::outb(bus + 0x03, 0x00);
+}
+
+void ata() {
+	ata_init_device(&ata_primary_master);
+	/*ata_init_device(&ata_primary_slave);
+	ata_init_device(&ata_secondary_master);
+	ata_init_device(&ata_secondary_slave);*/ // these are unnessisary as QEMU uses only primary master.
+}
