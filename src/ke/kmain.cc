@@ -56,7 +56,7 @@ void main(multiboot_info* mbi) {
 
 	// Initialise data if not done already.
 	term.bgcolour = 0x0;
-	term.colour = byteColours(255, 0, 255);
+	term.colour = byteColours(255, 255, 255);
 	term.cursorX = 0;
 	term.cursorY = 0;
 

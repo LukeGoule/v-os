@@ -115,7 +115,8 @@ void irq_install() {
     irq_remap();
     irq_gates();
 
-    //IRQ_RES;
+    // WARNING: BROKEN - I DO NOT FUCKING KNOW HOW TO FIX LOL
+    // IRQ_RES;
 }
 
 void irq_ack(int irq_no) {
