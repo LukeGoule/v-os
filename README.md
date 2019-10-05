@@ -15,3 +15,11 @@ I recommend using Oracle VirualBox as it emulates using a PC quite accurately (a
 
 ## Screenshots
 ![](https://i.imgur.com/Rf6c1bi.png)
+
+
+## Side notes
+- This is not even nearly close to completion and has MANY different things to be done on it, so pull requests to update it are very welcome.
+ - It is just a personal project with many broken things and pieces of code taken from good projects (sadly I forgot to reference them in the actual code) so don't use my code to do anything worthwhile.
+ - There is no license on this code so don't worry about copying it and anybody getting annoyed, I would be honoured if somebody copied any code from this haha.
+ - IRQ's are broken and I don't have enough operating system development knowledge to fix them, so the keyboard input code is awful beyond what you would expect. 
+ - There is no tasking system (*yet*) so don't expect it to be calculating PI to the 1 billionth digit while drawing a pixel perfect replica of the Mona Lisa.
