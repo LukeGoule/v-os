@@ -5,7 +5,7 @@ Type `help` into the command line to see a list of commands. Be wary that some m
 v-os does not require any toolchain to be installed, but in the `Building` section there  list of the programs required to build this OS.
 
 ## Building
-Make sure `xorriso`, `G++` and `NASM` are installed before trying to build.
+Make sure `xorriso`, `G++`, `grub-mkrescue` and `NASM` are installed before trying to build.
 Run command `make` in your **Linux** terminal in the v-os directory to build the project.
 The object files will be placed in `v-os/obj` and the .iso that can be loaded is placed in the `v-os` directory.
 This will not work on Windows or OSX (unless you perform black magic?)
