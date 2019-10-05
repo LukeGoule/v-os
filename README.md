@@ -2,7 +2,7 @@
 Open source C++ operating system. It's recommended you do not use/copy this code as it is terrible and purely a fun project for me. *Also mind the profanity throughout the code.*
 This is purely a hobby OS and thus cannot do anything actually useful so don't expect to be hacking into NASA's servers with this!
 Type `help` into the command line to see a list of commands. Be wary that some may lock up the system or not work.
-v-os does not require any toolchain to be installed, but in the `Building` section there is listed the programs required to build this OS.
+v-os does not require any toolchain to be installed, but in the `Building` section there  list of the programs required to build this OS.
 
 ## Building
 Make sure `xorriso`, `G++` and `NASM` are installed before trying to build.
