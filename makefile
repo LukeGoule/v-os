@@ -13,12 +13,14 @@ OUTPUT = vos/boot/$(KVERSION).bin
 run: all
 	@sudo bash ./mkcd.sh
 	@#$(EMULATOR) $(EFLAGS) -cdrom vos.iso disk.img -boot d
+all:$(OBJS)
+	@$(LINKER) $(LDFLAGS) -o $(OUTPUT) $(OBJS)
+
+git:
 	@git pull
 	@git add *
 	@git commit -m "Update $(KVERSION)"
 	@git push
-all:$(OBJS)
-	@$(LINKER) $(LDFLAGS) -o $(OUTPUT) $(OBJS)
 
 obj/kmainasm.o:src/ke/kmain.asm
 	@$(ASSEMBLER) $(ASFLAGS) -o obj/kmainasm.o src/ke/kmain.asm
