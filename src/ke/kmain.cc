@@ -70,8 +70,12 @@ void main(multiboot_info* mbi) {
 
 	// da pci bus (network, graphics card et al)
 	pci_init();
+<<<<<<< HEAD
 
 	/*
+=======
+	
+>>>>>>> 8131ed7ac941de954647c387f96dc33f391533d1
 	if (mbi->mods_count > 0) {
 		multiboot_module_t* mods = (multiboot_module_t*)mbi->mods_addr;
 		uint32_t* module = (uint32_t*)mods->mod_start;
@@ -90,7 +94,10 @@ void main(multiboot_info* mbi) {
 		term.cursorX = 0;
 		term.cursorY = bmp_header->biHeight + 16;
 	}
+<<<<<<< HEAD
 	*/
+=======
+>>>>>>> 8131ed7ac941de954647c387f96dc33f391533d1
 
 	term.printf("VOS - The C++ Operating System Example\n");
 
