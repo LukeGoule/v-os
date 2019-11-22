@@ -152,6 +152,7 @@ bool rsdt_check(ACPISDTHeader *tableHeader);
 FADT* facp_find(RSDT *RootSDT, bool debug);
 
 void acpi_init();
+void acpi_reboot();
 void acpi_poweroff();
 
 

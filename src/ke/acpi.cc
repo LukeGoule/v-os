@@ -14,6 +14,8 @@ uint16_t 	SLP_EN;
 uint16_t 	SCI_EN;
 uint8_t 	PM1_CNT_LEN;
 
+FADT* facp;
+
 int32_t* rsdp_scan_mem() {
 	uint32_t* ptr = (uint32_t*)RSDP_MEM_MIN;
 
@@ -87,81 +89,84 @@ FADT* facp_find(RSDT* RootSDT, bool debug)
     return out;
 }
 
-void acpi_init() {
-	RSDPDescriptor20* rsdp = rsdp_init(true);
-	RSDT* rsdt = rsdt_init(rsdp, true);
-	FADT* fadt = facp_find(rsdt, true);
-	
-	if (fadt->SMI_CommandPort != 0) {
-		outportb(fadt->SMI_CommandPort, fadt->AcpiEnable);
-		term.printf("Enabled ACPI\n");
+char* acpi_find_dsdt_string(const char* string, uint32_t* dsdt) {
+	char* current_address = (char*)dsdt;
+	int dsdt_length = *(dsdt + 0x1);
+
+	while (0 < dsdt_length--) {
+		if (strcmpl(current_address, string, strlen(string)) == 0) {
+			break;
+		}
+
+		current_address++;
 	}
 
-	uint32_t* dsdt = (uint32_t*)(fadt->Dsdt);
+	if (current_address > 0) {
+		return current_address;
+	} else {
+		term.printf("[acpi_find_dsdt_string] Failed to find '%s'\n", string);
+		return NULL;
+	}
+}
+
+void acpi_setup_shutdown() {
+	auto S5Addr = acpi_find_dsdt_string("_S5_", (uint32_t*)(facp->Dsdt));
+
+	if (S5Addr != NULL) {
+		S5Addr += 5;
+        S5Addr += ((*S5Addr &0xC0)>>6) +2;   // calculate PkgLength size
+
+        if (*S5Addr == 0x0A)
+        	S5Addr++;   // skip byteprefix
+        SLP_TYPa = *(S5Addr)<<10;
+        S5Addr++;
+
+        if (*S5Addr == 0x0A)
+            S5Addr++;   // skip byteprefix
+        SLP_TYPb = *(S5Addr)<<10;
+
+        SMI_CMD = facp->SMI_CommandPort;
+
+        ACPI_ENABLE = facp->AcpiEnable;
+        ACPI_DISABLE = facp->AcpiDisable;
+
+        PM1a_CNT = facp->PM1aControlBlock;
+        PM1b_CNT = facp->PM1bControlBlock;
+         
+        PM1_CNT_LEN = facp->PM1ControlLength;
+
+        SLP_EN = 1<<13;
+        SCI_EN = 1;
+	} else {
+		term.printf("[acpi_setup_shutdown] Failed to setup shutdown (S5 missing?)\n");
+	}
+}
+
+void acpi_init() {
+	RSDPDescriptor20* rsdp 	= rsdp_init(true);
+	RSDT* rsdt 				= rsdt_init(rsdp, true);
+	facp 					= facp_find(rsdt, true);
+	
+	if (facp->SMI_CommandPort != 0) {
+		outportb(facp->SMI_CommandPort, facp->AcpiEnable);
+		term.printf("[ACPI] Enabled ACPI system.\n");
+	} else {
+		term.printf("[ACPI] Failed to init ACPI\n - Power management will not be available.\n");
+		return;
+	}
+
+	uint32_t* dsdt = (uint32_t*)(facp->Dsdt);
 
 	if (strcmpl((uint8_t*)dsdt, "DSDT", 4) == 0) {
-		char* S5Addr = (char*)fadt->Dsdt + 36;
-		char* SBAddr = (char*)fadt->Dsdt;
-		int dsdt_length = *(dsdt + 0x1) - 36;
-
-		while (0 < dsdt_length--) {
-			if (strcmpl(S5Addr, "_S5_", 4) == 0)
-				break;
-
-			S5Addr++;
-		}
-
-		if (dsdt_length > 0) {
-			S5Addr += 5;
-            S5Addr += ((*S5Addr &0xC0)>>6) +2;   // calculate PkgLength size
-
-            if (*S5Addr == 0x0A)
-            	S5Addr++;   // skip byteprefix
-            SLP_TYPa = *(S5Addr)<<10;
-            S5Addr++;
-
-            if (*S5Addr == 0x0A)
-                S5Addr++;   // skip byteprefix
-            SLP_TYPb = *(S5Addr)<<10;
-
-            SMI_CMD = fadt->SMI_CommandPort;
-
-            ACPI_ENABLE = fadt->AcpiEnable;
-            ACPI_DISABLE = fadt->AcpiDisable;
-
-            PM1a_CNT = fadt->PM1aControlBlock;
-            PM1b_CNT = fadt->PM1bControlBlock;
-             
-            PM1_CNT_LEN = fadt->PM1ControlLength;
-
-            SLP_EN = 1<<13;
-            SCI_EN = 1;
-		} else {
-			term.printf("S5 not found!\n");
-		}
-
-		// note for lesser dunk me haha:
-		// find what is \_SB and look around on the pdf
-		// perhaps i can find something interesting?
-		dsdt_length = *(dsdt + 0x1);
-
-		while (0 < dsdt_length--) {
-			if (strcmpl(SBAddr, "_SB", 3) == 0) {
-				break;
-			}
-
-			SBAddr++;
-		}
-
-		if (dsdt_length > 0) {
-			term.printf("Found _SB\n");
-		} else {
-			term.printf("Failed to find _SB\n");
-		}
-
+		acpi_setup_shutdown();
 	} else {
 		term.printf("DSDT Not supported??\n");
 	}
+}
+
+void acpi_reboot() {
+
+	term.printf("0x%x: 0x%x", facp->ResetReg, facp->ResetValue);
 }
 
 void acpi_poweroff() {

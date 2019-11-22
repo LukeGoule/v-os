@@ -6,7 +6,7 @@ ASFLAGS = -f elf32
 LDFLAGS = -m elf_i386 -T src/link.ld
 EMULATOR = qemu-system-i386
 EFLAGS = -m 512 -vga std -display gtk -s -netdev user,id=vmnic -device rtl8139,netdev=vmnic -machine type=q35,accel=kvm -cpu host,check -smp 12 -enable-kvm
-KVERSION = alpha-004
+KVERSION = alpha-005
 OBJS = obj/kmainasm.o obj/kmaincc.o  obj/vgafont.o obj/vga.o obj/system.o obj/pci.o obj/terminal.o obj/acpi.o obj/mem.o obj/irq.o obj/gdt.o obj/drawtest.o obj/input.o obj/ata.o obj/maths.o obj/string.o obj/fpu.o obj/rtl.o
 OUTPUT = vos/boot/$(KVERSION).bin
 

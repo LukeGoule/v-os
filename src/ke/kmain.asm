@@ -24,7 +24,7 @@ start:
 	push esp
 
 	push ebx
-	push eax
+	push eax ;bruh
 
 	cli
 

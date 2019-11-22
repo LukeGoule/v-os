@@ -1,7 +1,10 @@
 #include <kernel.h>
 #include <string.h>
 
-bool g_bCaps = false; // Is caps lock on?
+#define SCAN_LEFT_ARR 0x4B
+#define SCAN_RIGHT_ARR 0x4D
+#define SCAN_UP_ARR 0x48
+#define SCAN_DOWN_ARR 0x50
 
 // Poll the keyboard for input.
 char GetScanCode() {
@@ -26,9 +29,19 @@ char* getchar() {
 	unsigned char c = GetScanCode();
 
 	if (!(c & (1 << 7))) {
-
-		return scancodes1[c];
-
+		auto scan = scancodes1[c];
+		switch (c) {
+		case SCAN_LEFT_ARR:
+			return "<LARR>";
+		case SCAN_RIGHT_ARR:
+			return "<RARR>";
+		case SCAN_UP_ARR:
+			return "<UARR>";
+		case SCAN_DOWN_ARR:
+			return "<DARR>";
+		default:
+			return scancodes1[c];
+		}
 	} else {
 		return "";
 	}

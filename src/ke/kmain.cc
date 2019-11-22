@@ -21,7 +21,7 @@ RTC real_time;
 
 extern int start_sym;
 extern int end_sym;
- 
+
 unsigned char RCMOS(int cadd) {
 	Ports::outb(cmos_address, cadd);
 	return (Ports::inb(cmos_data));
@@ -29,6 +29,8 @@ unsigned char RCMOS(int cadd) {
 
 char out[MAX_OUT_LEN];
 char prev = 0;
+
+char previous[128][MAX_OUT_LEN];
 
 static void* next_address;
 
@@ -69,7 +71,6 @@ void main(multiboot_info* mbi) {
 	// da pci bus (network, graphics card et al)
 	pci_init();
 
-
 	/*
 	if (mbi->mods_count > 0) {
 		multiboot_module_t* mods = (multiboot_module_t*)mbi->mods_addr;
@@ -85,9 +86,11 @@ void main(multiboot_info* mbi) {
 			}
 		}
 
+            (strcmp(c, "<UARR>") == 0)   ||  // Up arrow
 		term.cursorX = 0;
 		term.cursorY = bmp_header->biHeight + 16;
-	}*/
+	}
+	*/
 
 	term.printf("VOS - The C++ Operating System Example\n");
 
@@ -98,18 +101,29 @@ void main(multiboot_info* mbi) {
 	int ccy = term.cursorY;
 	int ccx = term.cursorX;
 	int outptr = 0;
-	
+    int cmdid = 0;
+
 	while (1) {
 		ata_device* primary = &ata_primary(1);
 
 		char* c= getchar();
-		if (c == "\0" || 
-			c[0] == '\0' || 
-			(strcmp(c, "<CAPSL>") == 0) ||
+
+        if (c == "\0"                    ||
+			c[0] == '\0'                 ||
+            c == "S_"                    ||
+            (strcmp(c, "<CAPSL>") == 0)  ||
 			(strcmp(c, "<LSHIFT>") == 0) ||
 			(strcmp(c, "<RSHIFT>") == 0) ||
-			(strcmp(c, "<LALT>") == 0)) continue;
-		term.Print(c);
+			(strcmp(c, "<LALT>") == 0)   ||
+            (strcmp(c, "<LARR>") == 0)   ||  // Left arrow
+            (strcmp(c, "<RARR>") == 0)   ||  // Right arrow
+            (strcmp(c, "<DARR>") == 0)       // Down arrow
+            ) continue;
+
+        //if (strcmp(c, "<UARR>") == 0 && cmdid > 0) {
+    //        term.printf("%s\n", previous[cmdid-1]);
+    //    }
+
 		if (c[0] != '\n') {
 			out[outptr] = (uint8_t*)c[0];
 			//out[outptr+1] = 0;
@@ -135,35 +149,32 @@ void main(multiboot_info* mbi) {
 				term.printf("\tfputest\n");
 				term.printf("\tdiv0\n");
 				term.printf("\tcls / clear\n");
-				
+
 			} else if (strcmpl(cmd, "time", 4) == 0) {
 				real_time.read_rtc();
 				term.printf("The current time is %d:%d\n", real_time.hour, real_time.minute);
-			} else if (strcmpl(cmd, "reboot", 4) == 0) {
-				for (;;)
-					asm("int3");
-			} 
+			}
 			else if (strcmp(cmd, "ata init") == 0) {
 				term.clear();
 				term.cursorX = 0;
 				term.cursorY = 0;
 				ata_init_device(&ata_primary(1));
-			} 
+			}
 			else if (strcmp(cmd, "ata stat") == 0) {
 				int status = Ports::inb(ata_primary(1).io_base + ATA_REG_COMMAND);
 				ata_wait(&ata_primary(1), 0);
 				term.printf("\tDevice status: 0x%x\n", status);
-			} 
+			}
 			else if (strcmpl(cmd, "drawtest", 8) == 0) {
 				DoDrawTest();
-			} 
+			}
 			else if (strcmp(cmd, "fputest") == 0) {
 				float sintest = sin(45.f);
 				float costest = cos(90.f);
 
 				term.printf("sin(45) = %f\n", sintest);
 				term.printf("cos(90) = %f\n", costest);
-			} 
+			}
 			else if (strcmp(cmd, "div0") == 0) {
 				int i = 0/0;
 			}
@@ -175,9 +186,17 @@ void main(multiboot_info* mbi) {
 			else if (strcmp(cmd, "shutdown") == 0){
 				acpi_poweroff();
 			}
+			else if (strcmp(cmd, "reboot") == 0) {
+				acpi_reboot();
+			}
 			else {
 				term.printf("Command %s not recognised.\n", cmd);
 			}
+
+            for (int iter = 0; iter < strlen(out); iter++) {
+                previous[cmdid][iter] = out[iter];
+            }
+            cmdid ++;
 
 			for (int i = 0; i < MAX_OUT_LEN; i++) {
 				out[i] = 0;
